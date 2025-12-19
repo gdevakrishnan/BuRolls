@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../serviceWorkers/authServices";
+import { useContext } from "react";
+import AppContext from "../../context/AppContext";
 
 const Login = () => {
+  const { setUser, setIsAuthenticated } = useContext(AppContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +43,9 @@ const Login = () => {
         .then((response) => {
           console.log(response);
           if (response?.status == 200 || response?.status == 201) {
+            localStorage.setItem('burolls-token', response?.data?.token);
+            setUser(response?.data?.user);
+            setIsAuthenticated(true);
             alert(response?.data?.msg || "Login successfull");
           }
           nav("/");
