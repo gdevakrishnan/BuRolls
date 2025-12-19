@@ -1,7 +1,12 @@
-import React from "react";
+import React, { Fragment } from "react";
+import AppRouter from "./router/Router";
 
 const App = () => {
-  return <h1 class="text-3xl font-bold underline">Hello world!</h1>;
+  return (
+    <Fragment>
+      <AppRouter />
+    </Fragment>
+  );
 };
 
 export default App;
