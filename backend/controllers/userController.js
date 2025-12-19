@@ -63,8 +63,16 @@ exports.approveUser = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?._id || req.user;
-    const user = await User.findById(userId).select("-password -tempPassword -__v");
+    let user = await User.findById(userId).select("-password -tempPassword -__v").populate({ path: 'company', select: 'name businessUnit' });
     if (!user) return res.status(404).json({ msg: "User not found" });
+
+    // If BU_USER, attach manager(s) responsible for the user's company BU
+    if (user.role === 'BU_USER' && user.company && user.company.businessUnit) {
+      const managers = await User.find({ role: 'BU_MANAGER', businessUnits: user.company.businessUnit }).select('name email');
+      user = user.toObject();
+      user.managers = managers;
+    }
+
     res.status(200).json({ user });
   } catch (err) {
     console.error(err);

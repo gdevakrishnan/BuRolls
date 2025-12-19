@@ -44,15 +44,40 @@ const Login = () => {
           console.log(response);
           if (response?.status == 200 || response?.status == 201) {
             localStorage.setItem('burolls-token', response?.data?.token);
-            setUser(response?.data?.user);
-            setIsAuthenticated(true);
-            alert(response?.data?.msg || "Login successfull");
+            // fetch enriched user (populated company/managers)
+            import('../../serviceWorkers/authServices').then(({ me }) => {
+              me().then((meRes) => {
+                if (meRes?.status == 200 && meRes?.data?.user) {
+                  setUser(meRes.data.user);
+                  setIsAuthenticated(true);
+                  alert(response?.data?.msg || "Login successful");
 
-            // redirect based on role
-            const role = response?.data?.user?.role;
-            if (role === 'SUPER_ADMIN') nav('/admin/dashboard');
-            else if (role === 'BU_MANAGER') nav('/manager/dashboard');
-            else nav('/');
+                  // redirect based on role
+                  const role = meRes?.data?.user?.role || response?.data?.user?.role;
+                  if (role === 'SUPER_ADMIN') nav('/admin/dashboard');
+                  else if (role === 'BU_MANAGER') nav('/manager/dashboard');
+                  else nav('/');
+                } else {
+                  // fallback to login response user
+                  setUser(response?.data?.user);
+                  setIsAuthenticated(true);
+                  alert(response?.data?.msg || "Login successful");
+
+                  const role = response?.data?.user?.role;
+                  if (role === 'SUPER_ADMIN') nav('/admin/dashboard');
+                  else if (role === 'BU_MANAGER') nav('/manager/dashboard');
+                  else nav('/');
+                }
+              }).catch(() => {
+                setUser(response?.data?.user);
+                setIsAuthenticated(true);
+                alert(response?.data?.msg || "Login successful");
+                const role = response?.data?.user?.role;
+                if (role === 'SUPER_ADMIN') nav('/admin/dashboard');
+                else if (role === 'BU_MANAGER') nav('/manager/dashboard');
+                else nav('/');
+              });
+            });
           }
 
           setFormData({ email: "", password: "" });

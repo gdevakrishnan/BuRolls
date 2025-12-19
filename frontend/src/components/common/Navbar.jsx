@@ -25,6 +25,10 @@ const Navbar = () => {
       links.push({ to: "/admin/dashboard", label: "Dashboard" });
       links.push({ to: "/admin/business-units", label: "Business Units" });      links.push({ to: "/admin/managers", label: "Managers" });    } else if (user?.role === 'BU_MANAGER') {
       links.push({ to: "/manager/dashboard", label: "Dashboard" });
+      links.push({ to: "/manager/invoices", label: "Invoices" });
+    }
+    if (user?.role === 'BU_USER') {
+      links.push({ to: "/company/invoices", label: "Invoices" });
     }
     links.push({ to: "/profile", label: "Profile" });
     links.push({ to: "/", label: "Logout", action: () => {

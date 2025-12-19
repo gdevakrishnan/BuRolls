@@ -20,4 +20,10 @@ router.get("/business-units", auth, rbac("BU_MANAGER"), managerController.getAss
 router.get("/stats", auth, rbac("BU_MANAGER"), managerController.getStats);
 router.get("/users", auth, rbac("BU_MANAGER"), managerController.getUsers);
 
+// Manager invoices
+const invoiceController = require('../controllers/invoiceController');
+router.post('/invoices', auth, rbac('BU_MANAGER'), invoiceController.createInvoice);
+router.get('/invoices', auth, rbac('BU_MANAGER'), invoiceController.getManagerInvoices);
+router.get('/invoices/:invoiceId', auth, rbac('BU_MANAGER'), invoiceController.getInvoiceById);
+
 module.exports = router;

@@ -101,6 +101,19 @@ export default function Profile(){
           )}
         </div>
       )}
+
+      {user?.role === 'BU_USER' && (
+        <div className="border p-4 rounded">
+          <h3 className="font-semibold mb-2">Company & Manager</h3>
+          <p className="text-sm"><strong>Company:</strong> {user?.company?.name || '—'}</p>
+          <div className="mt-2">
+            <div className="font-semibold">Manager(s)</div>
+            {(user?.managers || []).map(m => (
+              <div key={m._id} className="text-sm text-gray-600">{m.name} ({m.email})</div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -34,3 +34,18 @@ export const getUsers = async () => {
   const res = await api.get('/manager/users');
   return res.data;
 };
+
+export const createInvoice = async (payload) => {
+  const res = await api.post('/manager/invoices', payload);
+  return res.data;
+};
+
+export const getManagerInvoices = async () => {
+  const res = await api.get('/manager/invoices');
+  return res.data;
+};
+
+export const getManagerInvoice = async (id) => {
+  const res = await api.get(`/manager/invoices/${id}`);
+  return res.data;
+};

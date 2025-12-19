@@ -16,6 +16,11 @@ import ManagerCreateCompany from "../pages/manager/CreateCompany";
 import ManagerUsersPage from "../pages/manager/UsersPage";
 import ManagerCreateUser from "../pages/manager/CreateUser";
 import Profile from "../pages/common/Profile";
+import SuperAdminInvoicesPage from "../pages/superadmin/InvoicesPage";
+import SuperAdminInvoiceDetail from "../pages/superadmin/InvoiceDetail";
+import ManagerInvoicesPage from "../pages/manager/InvoicesPage";
+import ManagerCreateInvoice from "../pages/manager/CreateInvoice";
+import CompanyInvoicesPage from "../pages/companies/CompanyInvoicesPage";
 
 const router = createBrowserRouter([
   {
@@ -51,6 +56,8 @@ const router = createBrowserRouter([
           { path: "business-units", element: <BusinessUnitsPage /> },
           { path: "managers", element: <ManagersPage /> },
           { path: "users", element: <UsersPage /> },
+          { path: "invoices", element: <SuperAdminInvoicesPage /> },
+          { path: "invoices/:invoiceId", element: <SuperAdminInvoiceDetail /> },
         ],
       },
 
@@ -64,6 +71,17 @@ const router = createBrowserRouter([
           { path: "companies/create", element: <ManagerCreateCompany /> },
           { path: "users", element: <ManagerUsersPage /> },
           { path: "users/create", element: <ManagerCreateUser /> },
+          { path: "invoices", element: <ManagerInvoicesPage /> },
+          { path: "invoices/create", element: <ManagerCreateInvoice /> },
+        ],
+      },
+
+      // Company routes for BU users
+      {
+        path: "company",
+        element: <ProtectedRoute roles={["BU_USER"]} />,
+        children: [
+          { path: "invoices", element: <CompanyInvoicesPage /> },
         ],
       },
     ],

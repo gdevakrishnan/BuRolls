@@ -9,6 +9,7 @@ export default function ManagerDashboard() {
   const [assignedBus, setAssignedBus] = useState([]);
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -17,11 +18,12 @@ export default function ManagerDashboard() {
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
 
-    // load assigned business units, users and stats
-    import('../../serviceWorkers/managerServices').then(({ getAssignedBusinessUnits, getStats, getUsers }) => {
+    // load assigned business units, users, stats and invoices
+    import('../../serviceWorkers/managerServices').then(({ getAssignedBusinessUnits, getStats, getUsers, getManagerInvoices }) => {
       getAssignedBusinessUnits().then((r)=> setAssignedBus(r.businessUnits || [])).catch(()=>{});
       getStats().then((s)=> setStats(s || {})).catch(()=>{});
       getUsers().then((r)=> setUsers(r.users || [])).catch(()=>{});
+      getManagerInvoices().then((r)=> setInvoices(r.invoices || [])).catch(()=>{});
     });
   }, []);
 
@@ -77,6 +79,22 @@ export default function ManagerDashboard() {
           ))}
         </div>
         <div className="text-sm"><Link className="text-blue-600" to={"/manager/users/create"}>Create User</Link></div>
+      </div>
+
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold">Invoices</h3>
+          <div className="text-sm text-blue-600"><Link to={'/manager/invoices'}>View more</Link></div>
+        </div>
+        <div className="space-y-3 mb-4">
+          {invoices.slice(0,5).map(inv => (
+            <div key={inv._id} className="border p-3 rounded">
+              <div className="font-semibold">Invoice #{inv.number} - {inv.type}</div>
+              <div className="text-sm text-gray-500">Status: {inv.status}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-sm"><Link className="text-blue-600" to={'/manager/invoices/create'}>Create Invoice</Link></div>
       </div>
 
       {loading && <p>Loading...</p>}

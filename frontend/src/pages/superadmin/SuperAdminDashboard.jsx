@@ -8,6 +8,7 @@ export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [managers, setManagers] = useState([]);
   const [users, setUsers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -20,14 +21,17 @@ export default function SuperAdminDashboard() {
       .then((res) => setStats(res || res.data))
       .catch(console.error);
 
-    // load top managers and users (limit 5)
+    // load top managers, users and invoices (limit 5)
     import("../../serviceWorkers/adminServices").then(
-      ({ getManagers, getUsers }) => {
+      ({ getManagers, getUsers, getInvoices }) => {
         getManagers({ limit: 5 })
           .then((r) => setManagers(r.managers || []))
           .catch(() => {});
         getUsers({ limit: 5 })
           .then((r) => setUsers(r.users || []))
+          .catch(() => {});
+        getInvoices({ limit: 5 })
+          .then((r) => setInvoices(r.invoices || []))
           .catch(() => {});
       }
     );
@@ -133,6 +137,22 @@ export default function SuperAdminDashboard() {
           {" "}
           <Link to={'/admin/users'}>View More</Link>
         </div>
+      </div>
+
+      {/* Invoices (top 5) */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Invoices</h2>
+        <div className="space-y-2">
+          {invoices.map(inv => (
+            <div key={inv._id} className="border p-3 rounded">
+              <div className="font-semibold">Invoice #{inv.number} - {inv.type}</div>
+              <div className="text-sm text-gray-500">Status: {inv.status}</div>
+              <div className="text-sm text-gray-500">Manager: {inv.manager?.name}</div>
+              <div className="text-sm text-gray-500 mt-2"><Link to={`/admin/invoices/${inv._id}`} className="text-blue-600">View</Link></div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-sm text-blue-600 cursor-pointer"> <Link to={'/admin/invoices'}>View More</Link></div>
       </div>
     </div>
   );
