@@ -1,10 +1,12 @@
-# Multi-Business Unit Invoice Management System
+# BuRolls - Multi-Business Unit Invoice Management System (MERN Stack)
 
 ## 1. Project Overview
 
-The **Multi-Business Unit Invoice Management System** is a web-based application designed to manage invoices across multiple Business Units (BUs) and Companies with strict **role-based access control (RBAC)** and **multi-level approval workflows**.
+The **Multi-Business Unit Invoice Management System (BuRolls)** is a web-based platform for managing invoices across multiple Business Units (BUs) and Companies. It includes **role-based access control (RBAC)**, **multi-level approval workflows**, and a flexible notification system.
 
-The system allows BUs to raise invoices, BU Managers to manage companies and approvals, and Super Admins to control system-wide permissions and configurations.
+* **BU Users:** Create and track invoices.
+* **BU Managers:** Approve/reject invoices, manage company groups.
+* **Super Admins:** Control system-wide permissions and monitor activity.
 
 ---
 
@@ -12,119 +14,78 @@ The system allows BUs to raise invoices, BU Managers to manage companies and app
 
 ### Backend
 
-* **Framework:** Python Django
-* **API Layer:** Django REST Framework (DRF)
-* **Authentication:** JWT (SimpleJWT)
-* **Authorization:** Role-Based Access Control (RBAC)
-* **Database:** Neon (PostgreSQL – Serverless)
-* **ORM:** Django ORM
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Authentication:** JWT (JSON Web Tokens)
+* **Authorization:** Role-Based Access Control (RBAC) middleware
+* **Database:** MongoDB (Atlas or local)
+* **ORM/ODM:** Mongoose
 
-### Folder structure
+### Frontend
+
+* **Framework:** React.js
+* **State Management:** React Context / Redux (optional)
+* **UI Library:** TailwindCSS
+* **Routing:** React Router DOM
+* **API Communication:** Axios
+
+### Other Tools
+
+* **PDF Generation:** pdf-lib / jsPDF
+* **Notifications:** MongoDB-based or socket.io for real-time
+* **Version Control:** Git + GitHub
+
+---
+
+## 3. Folder Structure
 
 ```
 BuRolls/
 │
 ├── backend/
-│   ├── manage.py
-│   ├── requirements.txt
+│   ├── server.js                  # Entry point
+│   ├── package.json
 │   ├── .env
-│   ├── .gitignore
+│   ├── config/
+│   │   ├── db.js                  # MongoDB connection
+│   │   └── jwt.js                 # JWT config
 │   │
-│   ├── burulls/                    # Django project (config)
-│   │   ├── __init__.py
-│   │   ├── asgi.py
-│   │   ├── settings/
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py              # Common settings
-│   │   │   ├── dev.py               # Development settings
-│   │   │   └── prod.py              # Production settings
-│   │   │
-│   │   ├── urls.py
-│   │   └── wsgi.py
+│   ├── middleware/
+│   │   ├── auth.js                # JWT verification
+│   │   └── rbac.js                # Role-based access
 │   │
-│   ├── apps/
-│   │   ├── auth/                    # Custom authentication & JWT
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── models.py            # Custom User, Role
-│   │   │   ├── serializers.py
-│   │   │   ├── permissions.py       # RBAC permissions
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── migrations/
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Role.js
+│   │   ├── Company.js
+│   │   ├── CompanyGroup.js
+│   │   ├── Invoice.js
+│   │   ├── ApprovalTrail.js
+│   │   ├── Notification.js
+│   │   └── AuditLog.js
 │   │
-│   │   ├── superadmin/              # System-wide control
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── serializers.py
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── permissions.py
+│   ├── routes/
+│   │   ├── auth.js
+│   │   ├── users.js
+│   │   ├── managers.js
+│   │   ├── superadmin.js
+│   │   ├── companies.js
+│   │   ├── invoices.js
+│   │   └── notifications.js
 │   │
-│   │   ├── managers/                # BU Manager domain
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── serializers.py
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── permissions.py
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── userController.js
+│   │   ├── managerController.js
+│   │   ├── superadminController.js
+│   │   ├── companyController.js
+│   │   ├── invoiceController.js
+│   │   └── notificationController.js
 │   │
-│   │   ├── users/                   # BU Users
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── serializers.py
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── permissions.py
-│   │
-│   │   ├── companies/               # Companies & Groups
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── models.py            # Company, CompanyGroup
-│   │   │   ├── serializers.py
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── migrations/
-│   │
-│   │   ├── invoices/                # Invoice domain
-│   │   │   ├── __init__.py
-│   │   │   ├── admin.py
-│   │   │   ├── apps.py
-│   │   │   ├── models.py            # Invoice, ApprovalTrail
-│   │   │   ├── serializers.py
-│   │   │   ├── services.py          # Approval logic, workflows
-│   │   │   ├── views.py
-│   │   │   ├── urls.py
-│   │   │   └── migrations/
-│   │
-│   │   ├── notifications/           # Notification system
-│   │   │   ├── __init__.py
-│   │   │   ├── models.py
-│   │   │   ├── services.py
-│   │   │   ├── serializers.py
-│   │   │   ├── views.py
-│   │   │   └── migrations/
-│   │
-│   │   ├── audit_logs/               # Audit & activity tracking
-│   │   │   ├── __init__.py
-│   │   │   ├── models.py
-│   │   │   ├── services.py
-│   │   │   └── migrations/
-│   │
-│   │   └── common/                   # Shared utilities
-│   │       ├── __init__.py
-│   │       ├── permissions.py
-│   │       ├── pagination.py
-│   │       ├── mixins.py
-│   │       └── constants.py
-│   │
-│   ├── media/                        # Invoice PDFs
-│   └── static/
+│   └── services/
+│       ├── approvalService.js     # Approval workflows
+│       ├── notificationService.js
+│       └── auditService.js
 │
 ├── frontend/
 │   ├── package.json
@@ -132,9 +93,8 @@ BuRolls/
 │   ├── postcss.config.js
 │   ├── public/
 │   │   └── index.html
-│   │
 │   └── src/
-│       ├── api/                      # Axios configs
+│       ├── api/
 │       │   ├── axios.js
 │       │   └── endpoints.js
 │       │
@@ -167,306 +127,197 @@ BuRolls/
 │       ├── App.jsx
 │       └── main.jsx
 │
-├── docs/
-│   ├── api.md
-│   ├── database.md
-│   └── workflows.md
-│
 └── README.md
 ```
 
-### Frontend
-
-* **Framework:** React
-* **State Management:** React Context
-* **UI Library:** TailwindCSS
-* **Routing:** React Router
-* **API Communication:** Axios
-
-### Other Tools
-
-* **PDF Generation:** WeasyPrint / ReportLab (Optional)
-* **Notifications:** Database-backed notification system
-* **Version Control:** Git + GitHub
-
 ---
 
-## 3. User Roles & Permissions
+## 4. User Roles & Permissions
 
-### 3.1 Super Admin
+### 4.1 Super Admin
 
-**Responsibilities**
+* Manage users, roles, and permissions
+* Configure field-level access
+* View system-wide audit logs and analytics
 
-* Create and manage users
-* Assign roles (BU Manager, BU User)
-* Configure role-based permissions
-* Configure field-level access (Manager-only / BU-editable)
-* View system-wide audit logs
-* View system statistics
+### 4.2 BU Manager
 
-**Access Scope**
-
-* Full system access
-* Can access all BUs, companies, and invoices
-
----
-
-### 3.2 BU Manager
-
-**Responsibilities**
-
-* Create and manage company groups
-* Onboard companies
+* Manage company groups
+* Approve/reject carry invoices
 * Assign BUs to company groups
-* Review and approve/reject carry invoices
-* View all invoices under assigned company groups
 
-**Access Scope**
+### 4.3 BU User
 
-* Only assigned company groups
-* Cannot access other BU Manager data
-
----
-
-### 3.3 BU User
-
-**Responsibilities**
-
-* Raise invoices for assigned companies
-* Create regular invoices
-* Create carry invoices (approval required)
-* View invoice status and history
-
-**Access Scope**
-
-* Only assigned companies
-* No access to approval actions
+* Create invoices (regular & carry)
+* Track invoice status
+* No approval privileges
 
 ---
 
-## 4. Core Features
+## 5. Core Features
 
-## 4.1 Authentication & Authorization
+### 5.1 Authentication & Authorization
 
 * JWT-based authentication
-* Role-based authorization middleware
+* Role-based middleware for route protection
 * Token refresh mechanism
-* Secure password hashing (Django default)
+* Password hashing using bcrypt
 
 ---
 
-## 4.2 Company & Group Management
+### 5.2 Company & Group Management
 
-### Company Groups
-
-* Created by BU Managers
-* A group contains multiple sibling companies
-* Used for carry invoice eligibility
-
-### Company Onboarding
-
-Fields are categorized into:
-
-* **Manager-only fields** (editable only by BU Manager)
-* **BU-editable fields** (editable by BU Users)
-
-Field-level access is configured by Super Admin.
+* Company Groups created by BU Managers
+* Field-level access controlled by Super Admin
+* MongoDB collections: `companies`, `companyGroups`
 
 ---
 
-## 4.3 Invoice Management
+### 5.3 Invoice Management
 
-### Invoice Types
+**Invoice Types:**
 
-#### 1. Regular Invoice
+1. **Regular Invoice:** Direct submission, no approval
+2. **Carry Invoice:** Requires multi-level approval
 
-* Created by BU
-* No approval required
-* Directly submitted
-* PDF generated immediately (optional)
+**Workflow:**
 
-#### 2. Carry Invoice
+| State                          | Description                     |
+| ------------------------------ | ------------------------------- |
+| DRAFT                          | Invoice not submitted           |
+| SUBMITTED                      | Regular invoice submitted       |
+| PENDING_BU_MANAGER_APPROVAL    | Awaiting BU Manager approval    |
+| PENDING_CARRY_COMPANY_APPROVAL | Awaiting Carry Company approval |
+| APPROVED                       | Fully approved                  |
+| REJECTED                       | Rejected at any stage           |
 
-* Invoice amount carried to another company in same group
-* Requires multi-level approval
+**Approval Steps:**
 
----
-
-### Carry Invoice Workflow
-
-#### State 1: Invoice Creation (BU)
-
-* BU selects original company
-* Selects sibling company as carry company
-* Submits invoice
-* Status → `PENDING_BU_MANAGER_APPROVAL`
-
-#### State 2: BU Manager Approval
-
-* BU Manager reviews invoice
-* Adds remarks
-* Actions:
-
-  * **Approve** → Status: `PENDING_CARRY_COMPANY_APPROVAL`
-  * **Reject** → Status: `REJECTED`
-
-#### State 3: Carry Company Approval
-
-* Carry company user reviews invoice
-* Adds remarks
-* Actions:
-
-  * **Approve** → Status: `APPROVED`
-  * **Reject** → Status: `REJECTED`
-
-#### State 4: Finalization
-
-* PDF generated after final approval
-* Approval trail stored permanently
+1. BU User submits carry invoice → Status: `PENDING_BU_MANAGER_APPROVAL`
+2. BU Manager approves/rejects → Status: `PENDING_CARRY_COMPANY_APPROVAL` / `REJECTED`
+3. Carry company approves/rejects → Status: `APPROVED` / `REJECTED`
+4. PDF generated after final approval
 
 ---
 
-### Invoice Statuses
+### 5.4 Notification System
 
-| Status                         | Description               |
-| ------------------------------ | ------------------------- |
-| DRAFT                          | Invoice not submitted     |
-| SUBMITTED                      | Regular invoice submitted |
-| PENDING_BU_MANAGER_APPROVAL    | Awaiting BU Manager       |
-| PENDING_CARRY_COMPANY_APPROVAL | Awaiting Carry Company    |
-| APPROVED                       | Fully approved            |
-| REJECTED                       | Rejected at any stage     |
+* Blocking notifications: approval requests, high-priority alerts
+* Informational notifications: invoice status updates
+* Role-based delivery: BU User, BU Manager, Carry Company
 
 ---
 
-## 5. Notification System (Optional but Recommended)
+### 5.5 Dashboard & Reporting
 
-### Notification Types
-
-#### Primary Notifications (Blocking)
-
-* Approval requests
-* High-priority alerts
-
-#### Secondary Notifications
-
-* Invoice status updates
-* Informational alerts
-
-### Notification Rules
-
-| Role             | Notification              |
-| ---------------- | ------------------------- |
-| BU Manager       | Carry invoice submitted   |
-| Carry Company    | Approved by BU Manager    |
-| BU User          | Invoice approved/rejected |
-| Original Company | Invoice created           |
+**Super Admin Dashboard:** Users, invoices, roles, audit logs
+**BU Manager Dashboard:** Pending approvals, company group summary
+**BU User Dashboard:** Assigned companies, recent invoices
+**Company Dashboard:** Pending approvals, invoice history, PDF downloads
 
 ---
 
-## 6. Dashboard & Reporting
+## 6. Database Design (MongoDB)
 
-### Super Admin Dashboard
+**Collections:**
 
-* Total users
-* Total invoices
-* Role configurations
-* Audit logs
-
-### BU Manager Dashboard
-
-* Company group cards
-* Pending approvals
-* Invoice statistics
-
-### BU Dashboard
-
-* Assigned companies
-* Recent invoices
-* Quick invoice creation
-
-### Company Dashboard
-
-* Pending approvals
-* Invoice history
-* PDF downloads
+* `users` – User accounts with roles
+* `roles` – Role definitions
+* `permissions` – RBAC mapping
+* `businessUnits` – Business unit info
+* `companyGroups` – Groups of companies
+* `companies` – Company details
+* `invoices` – Invoice documents
+* `approvalTrails` – Multi-level approval history
+* `notifications` – Notification messages
+* `auditLogs` – System activity
 
 ---
 
-## 7. Database Design (High Level)
+## 7. API Design (Sample)
 
-### Core Tables
-
-* `users`
-* `roles`
-* `permissions`
-* `business_units`
-* `company_groups`
-* `companies`
-* `invoices`
-* `invoice_approvals`
-* `notifications`
-* `audit_logs`
-
----
-
-## 8. API Design (Sample)
-
-### Authentication
+**Authentication:**
 
 ```
-POST /api/auth/login/
-POST /api/auth/refresh/
+POST /api/auth/login
+POST /api/auth/refresh
 ```
 
-### Invoice
+**Invoice:**
 
 ```
-POST   /api/invoices/
-GET    /api/invoices/
-GET    /api/invoices/{id}/
-POST   /api/invoices/{id}/approve/
-POST   /api/invoices/{id}/reject/
+POST   /api/invoices
+GET    /api/invoices
+GET    /api/invoices/:id
+POST   /api/invoices/:id/approve
+POST   /api/invoices/:id/reject
 ```
 
-### Company
+**Company:**
 
 ```
-POST /api/companies/
-GET  /api/companies/
+POST /api/companies
+GET  /api/companies
 ```
 
 ---
 
-## 9. Security Considerations
+## 8. Security Considerations
 
 * JWT authentication
-* Role-based permissions
-* Input validation (DRF serializers)
-* SQL injection protection (ORM)
-* Audit logging for approvals
-* Secure environment variables
+* Role-based access control
+* Input validation (express-validator or custom)
+* MongoDB query protection
+* Audit logging
 
 ---
 
-## 10. Deployment Architecture
+## 9. Deployment Architecture
 
-* **Frontend:** React (Netlify)
-* **Backend:** Django (Render)
-* **Database:** Neon PostgreSQL
+* **Frontend:** React (Netlify / Vercel)
+* **Backend:** Node.js + Express (Render / Heroku)
+* **Database:** MongoDB Atlas
 
 ---
 
-## 11. Future Enhancements
+## 10. Future Enhancements
 
 * Email notifications
 * Invoice templates
-* Bulk invoice upload
+* Bulk invoice uploads
 * Analytics & export reports
-* real-time notifications
+* Real-time notifications with socket.io
 
 ---
 
-## 12. Conclusion
+## 11. Hierarchical Registration & Approval Flow 🔧
 
-This system provides a **scalable, secure, and role-driven invoice management platform** suitable for multi-business environments with complex approval workflows.
+This project supports a hierarchical user and company approval workflow where credentials are emailed on approval.
+
+Flows:
+
+1. **Super Admin**
+   - Registers via `POST /api/auth/register-superadmin` (creates an approved `SUPER_ADMIN`).
+   - Logs in via `POST /api/auth/login`.
+
+2. **BU Manager / BU User registration**
+   - A manager or user requests account via `POST /api/users/request` with `{ name, email, role }`.
+   - The system generates a temporary password (stored temporarily) and notifies the Super Admin via email.
+   - Super Admin approves via `POST /api/users/approve/:userId` (protected by `SUPER_ADMIN` role). On approval an email is sent to the user with the temporary password and login instructions.
+
+3. **Company creation and approval**
+   - An authenticated `BU_USER` requests a company via `POST /api/companies/request` with `{ name }`.
+   - All approved `BU_MANAGER` users are notified by email to review the request.
+   - A `BU_MANAGER` approves via `POST /api/companies/approve/:companyId` (protected by `BU_MANAGER` role). The company creator receives an approval email.
+
+Environment variables required for the workflow and email sending:
+
+- `MONGO_URI` - MongoDB connection string
+- `JWT_SECRET` - JWT secret
+- `JWT_EXPIRES_IN` - JWT expiry (optional)
+- `SUPERADMIN_EMAIL` - Email address to receive manager/user registration requests
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` - SMTP settings for nodemailer
+- `APP_BASE_URL` - (optional) base URL for constructing approval links
+
+---
+
