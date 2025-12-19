@@ -18,5 +18,6 @@ router.post("/companies/:companyId/users", auth, rbac("BU_MANAGER"), managerCrea
 // Manager helpers: get assigned business units and stats
 router.get("/business-units", auth, rbac("BU_MANAGER"), managerController.getAssignedBusinessUnits);
 router.get("/stats", auth, rbac("BU_MANAGER"), managerController.getStats);
+router.get("/users", auth, rbac("BU_MANAGER"), managerController.getUsers);
 
 module.exports = router;

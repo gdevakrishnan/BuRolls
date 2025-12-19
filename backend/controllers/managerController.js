@@ -30,3 +30,21 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Get all users under this manager across their companies
+exports.getUsers = async (req, res) => {
+  try {
+    const managerId = req.user?.id || req.user?._id || req.user;
+    const companies = await Company.find({ createdBy: managerId }).select("_id name businessUnit");
+    const companyIds = companies.map((c) => c._id);
+    const users = await User.find({ company: { $in: companyIds } })
+      .select("-password -__v")
+      .populate({ path: "company", select: "name businessUnit", populate: { path: "businessUnit", select: "name" } })
+      .lean();
+
+    res.status(200).json({ users, companies });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

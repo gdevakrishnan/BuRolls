@@ -29,3 +29,8 @@ export const getStats = async () => {
   const res = await api.get('/manager/stats');
   return res.data;
 };
+
+export const getUsers = async () => {
+  const res = await api.get('/manager/users');
+  return res.data;
+};

@@ -10,6 +10,11 @@ import ManagerDashboard from "../pages/manager/ManagerDashboard";
 import NotAuthorized from "../pages/common/NotAuthorized";
 import BusinessUnitsPage from "../pages/superadmin/BusinessUnitsPage";
 import ManagersPage from "../pages/superadmin/ManagersPage";
+import UsersPage from "../pages/superadmin/UsersPage";
+import ManagerCompaniesPage from "../pages/manager/CompaniesPage";
+import ManagerCreateCompany from "../pages/manager/CreateCompany";
+import ManagerUsersPage from "../pages/manager/UsersPage";
+import ManagerCreateUser from "../pages/manager/CreateUser";
 import Profile from "../pages/common/Profile";
 
 const router = createBrowserRouter([
@@ -45,6 +50,7 @@ const router = createBrowserRouter([
           { path: "dashboard", element: <SuperAdminDashboard /> },
           { path: "business-units", element: <BusinessUnitsPage /> },
           { path: "managers", element: <ManagersPage /> },
+          { path: "users", element: <UsersPage /> },
         ],
       },
 
@@ -54,6 +60,10 @@ const router = createBrowserRouter([
         element: <ProtectedRoute roles={["BU_MANAGER"]} />,
         children: [
           { path: "dashboard", element: <ManagerDashboard /> },
+          { path: "companies", element: <ManagerCompaniesPage /> },
+          { path: "companies/create", element: <ManagerCreateCompany /> },
+          { path: "users", element: <ManagerUsersPage /> },
+          { path: "users/create", element: <ManagerCreateUser /> },
         ],
       },
     ],

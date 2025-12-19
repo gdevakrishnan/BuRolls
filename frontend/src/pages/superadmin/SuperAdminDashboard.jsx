@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { getOverview, getStats } from '../../serviceWorkers/adminServices';
+import React, { useEffect, useState } from "react";
+import { getOverview, getStats } from "../../serviceWorkers/adminServices";
+import { Link } from "react-router-dom";
 
 export default function SuperAdminDashboard() {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [managers, setManagers] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -13,7 +16,21 @@ export default function SuperAdminDashboard() {
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
 
-    getStats().then((res) => setStats(res || res.data)).catch(console.error);
+    getStats()
+      .then((res) => setStats(res || res.data))
+      .catch(console.error);
+
+    // load top managers and users (limit 5)
+    import("../../serviceWorkers/adminServices").then(
+      ({ getManagers, getUsers }) => {
+        getManagers({ limit: 5 })
+          .then((r) => setManagers(r.managers || []))
+          .catch(() => {});
+        getUsers({ limit: 5 })
+          .then((r) => setUsers(r.users || []))
+          .catch(() => {});
+      }
+    );
   }, []);
 
   return (
@@ -42,17 +59,81 @@ export default function SuperAdminDashboard() {
       )}
 
       {loading && <p>Loading...</p>}
+
+      {/* Business Units (top 5) */}
       {data && (
-        <div className="space-y-6">
-          {data.data?.map((bu) => (
-            <div key={bu._id} className="border p-4 rounded">
-              <h2 className="text-lg font-semibold">{bu.name}</h2>
-              <p className="text-sm text-gray-600">Managers: {bu.managers?.length}</p>
-              <p className="text-sm text-gray-600">Companies: {bu.companies?.length}</p>
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">Business Units</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(data.data || []).slice(0, 5).map((bu) => (
+              <div key={bu._id} className="border p-4 rounded">
+                <h3 className="font-semibold">{bu.name}</h3>
+                <p className="text-sm text-gray-600">
+                  Managers: {bu.managers?.length}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Companies: {bu.companies?.length}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 text-sm text-blue-600 cursor-pointer">
+            <Link to={"/admin/business-units"}>View More</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Managers (top 5) */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Managers</h2>
+        <div className="space-y-2">
+          {managers.map((m) => (
+            <div key={m._id} className="border p-3 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold">{m.name}</div>
+                  <div className="text-sm text-gray-500">{m.email}</div>
+                  <div className="text-sm text-gray-500">
+                    Status: {m.status}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    BU: {m.businessUnits?.map((b) => b.name).join(", ")}
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      )}
+        <div className="mt-2 text-sm text-blue-600 cursor-pointer">
+          {" "}
+          <Link to={'/admin/managers'}>View More</Link>
+        </div>
+      </div>
+
+      {/* Users (top 5) */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Users</h2>
+        <div className="space-y-2">
+          {users.map((u) => (
+            <div key={u._id} className="border p-3 rounded">
+              <div className="font-semibold">
+                {u.name}{" "}
+                <span className="text-sm text-gray-500">({u.email})</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                BU: {u.company?.businessUnit?.name || "—"}
+              </div>
+              <div className="text-sm text-gray-500">
+                Manager: {u.managers?.map((m) => m.name).join(", ") || "—"}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-sm text-blue-600 cursor-pointer">
+          {" "}
+          <Link to={'/admin/users'}>View More</Link>
+        </div>
+      </div>
     </div>
   );
 }

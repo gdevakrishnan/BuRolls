@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { getManagerCompanies, createCompany, createCompanyUser } from '../../serviceWorkers/managerServices';
+import { getManagerCompanies } from '../../serviceWorkers/managerServices';
+import { Link } from 'react-router-dom';
 
 export default function ManagerDashboard() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({ name: '', businessUnit: '' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', companyId: '' });
   const [assignedBus, setAssignedBus] = useState([]);
   const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -17,28 +17,13 @@ export default function ManagerDashboard() {
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
 
-    // load assigned business units and stats
-    import('../../serviceWorkers/managerServices').then(({ getAssignedBusinessUnits, getStats }) => {
+    // load assigned business units, users and stats
+    import('../../serviceWorkers/managerServices').then(({ getAssignedBusinessUnits, getStats, getUsers }) => {
       getAssignedBusinessUnits().then((r)=> setAssignedBus(r.businessUnits || [])).catch(()=>{});
       getStats().then((s)=> setStats(s || {})).catch(()=>{});
+      getUsers().then((r)=> setUsers(r.users || [])).catch(()=>{});
     });
   }, []);
-
-  const handleCreate = async () => {
-    if (!form.name || !form.businessUnit) return alert('name and businessUnit required');
-    await createCompany(form);
-    setForm({ name: '', businessUnit: '' });
-    // reload
-    setLoading(true);
-    getManagerCompanies().then((res) => setCompanies(res.companies || [])).finally(()=>setLoading(false));
-  }
-
-  const handleCreateUser = async () => {
-    if (!userForm.name || !userForm.email || !userForm.companyId) return alert('name email company required');
-    const res = await createCompanyUser(userForm.companyId, { name: userForm.name, email: userForm.email });
-    if (res?.user) { alert('User created'); setUserForm({ name: '', email: '', companyId: '' }); }
-    else alert('Failed');
-  }
 
   return (
     <div className="p-6">
@@ -58,25 +43,40 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      <div className="mb-6 border p-4 rounded max-w-md">
-        <h3 className="font-semibold mb-2">Create Company</h3>
-        <input placeholder="Company name" className="w-full mb-2 p-2 border" value={form.name} onChange={(e)=>setForm({...form, name: e.target.value})} />
-        <select className="w-full mb-2 p-2 border" value={form.businessUnit} onChange={(e)=>setForm({...form, businessUnit: e.target.value})}>
-          <option value="">Select Business Unit</option>
-          {assignedBus.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-        </select>
-        <button className="bg-emerald-600 text-white px-3 py-1 rounded" onClick={handleCreate}>Create Company</button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold">Companies</h3>
+          <div className="text-sm text-blue-600">
+            <Link to={'/manager/companies'}>View more</Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          {companies.slice(0,5).map(c => (
+            <div key={c._id} className="border p-3 rounded">
+              <div className="font-semibold">{c.name}</div>
+              <div className="text-sm text-gray-500">Status: {c.status}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-sm"><Link to={'/manager/companies/create'} className="text-blue-600" href="">Create Company</Link></div>
       </div>
 
-      <div className="mb-6 border p-4 rounded max-w-md">
-        <h3 className="font-semibold mb-2">Create User</h3>
-        <input placeholder="User name" className="w-full mb-2 p-2 border" value={userForm.name} onChange={(e)=>setUserForm({...userForm, name: e.target.value})} />
-        <input placeholder="User email" className="w-full mb-2 p-2 border" value={userForm.email} onChange={(e)=>setUserForm({...userForm, email: e.target.value})} />
-        <select className="w-full mb-2 p-2 border" value={userForm.companyId} onChange={(e)=>setUserForm({...userForm, companyId: e.target.value})}>
-          <option value="">Select Company</option>
-          {companies.map(c=> <option key={c._id} value={c._id}>{c.name}</option>)}
-        </select>
-        <button className="bg-emerald-600 text-white px-3 py-1 rounded" onClick={handleCreateUser}>Create User</button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold">Users</h3>
+          <div className="text-sm text-blue-600">
+            <Link to={'/manager/users'}>View more</Link>
+          </div>
+        </div>
+        <div className="space-y-2 mb-4">
+          {users.slice(0,5).map(u => (
+            <div key={u._id} className="border p-3 rounded">
+              <div className="font-semibold">{u.name} <span className="text-sm text-gray-500">({u.email})</span></div>
+              <div className="text-sm text-gray-500">Company: {u.company?.name}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-sm"><Link className="text-blue-600" to={"/manager/users/create"}>Create User</Link></div>
       </div>
 
       {loading && <p>Loading...</p>}

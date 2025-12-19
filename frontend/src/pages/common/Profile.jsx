@@ -4,13 +4,17 @@ import { changePassword } from '../../serviceWorkers/authServices';
 
 export default function Profile(){
   const { user } = useContext(AppContext);
-  const [form, setForm] = useState({ oldPassword: '', newPassword: '' });
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
   const handleChange = async () => {
-    const res = await changePassword(form);
+    if (!form.currentPassword || !form.newPassword || !form.confirmPassword) return alert('All fields required');
+    if (form.newPassword !== form.confirmPassword) return alert('New password and confirm password do not match');
+
+    const payload = { oldPassword: form.currentPassword, newPassword: form.newPassword };
+    const res = await changePassword(payload);
     if (res?.status === 200) alert('Password changed');
     else alert(res.message || 'Failed');
-    setForm({ oldPassword: '', newPassword: '' });
+    setForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   }
 
   return (
@@ -22,8 +26,9 @@ export default function Profile(){
         <p><strong>Role:</strong> {user?.role}</p>
         <hr className="my-4" />
         <h3 className="font-semibold mb-2">Change Password</h3>
-        <input className="w-full mb-2 p-2 border" placeholder="Current password" type="password" value={form.oldPassword} onChange={(e)=>setForm({...form, oldPassword: e.target.value})} />
+        <input className="w-full mb-2 p-2 border" placeholder="Current password" type="password" value={form.currentPassword} onChange={(e)=>setForm({...form, currentPassword: e.target.value})} />
         <input className="w-full mb-2 p-2 border" placeholder="New password" type="password" value={form.newPassword} onChange={(e)=>setForm({...form, newPassword: e.target.value})} />
+        <input className="w-full mb-2 p-2 border" placeholder="Confirm new password" type="password" value={form.confirmPassword} onChange={(e)=>setForm({...form, confirmPassword: e.target.value})} />
         <button className="bg-emerald-600 text-white px-3 py-1 rounded" onClick={handleChange}>Change Password</button>
       </div>
     </div>
