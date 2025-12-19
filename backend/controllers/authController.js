@@ -21,18 +21,46 @@ exports.registerSuperAdmin = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
+
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
-    if (user.status !== "APPROVED") return res.status(403).json({ msg: "User not approved yet" });
+    if (!user) {
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
+
+    if (user.status !== "APPROVED") {
+      return res.status(403).json({ msg: "User not approved yet" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, secret, { expiresIn });
-    res.json({ token });
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+    };
+
+    const token = jwt.sign(
+      { user: userData },
+      secret,
+      { expiresIn }
+    );
+
+    res.status(200).json({
+      msg: "Login successfull",
+      token,
+      user: userData,
+    });
+
   } catch (err) {
-    res.status(500).send("Server error");
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
   }
 };
+
