@@ -299,6 +299,8 @@ Flows:
 1. **Super Admin**
    - Registers via `POST /api/auth/register-superadmin` (creates an approved `SUPER_ADMIN`).
    - Logs in via `POST /api/auth/login`.
+   - Creates business units via `POST /api/v1/business-units/` (fields: `name`, `companyLegalName`, `companyAddress`, `contactPhone`).
+   - Assigns manager access to a business unit via `POST /api/v1/business-units/:id/assign-manager` (body: `{ "managerId": "...", "fields": ["name","companyAddress"] }`).
 
 2. **BU Manager / BU User registration**
    - A manager or user requests account via `POST /api/users/request` with `{ name, email, role }`.
@@ -309,6 +311,12 @@ Flows:
    - An authenticated `BU_USER` requests a company via `POST /api/companies/request` with `{ name }`.
    - All approved `BU_MANAGER` users are notified by email to review the request.
    - A `BU_MANAGER` approves via `POST /api/companies/approve/:companyId` (protected by `BU_MANAGER` role). The company creator receives an approval email.
+
+Additional details:
+
+- **Business Unit fields** now include `companyLegalName`, `companyAddress`, and `contactPhone`.
+- **Company fields** now include `legalName`, `legalAddress`, `address`, and `contactPhone`.
+- **Manager permissions**: Super Admin can assign field-level permissions for managers per business unit; managers can only edit the fields they've been granted access to on a BU they are mapped to.
 
 Environment variables required for the workflow and email sending:
 

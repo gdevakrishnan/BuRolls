@@ -53,3 +53,56 @@ exports.approveCompany = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
+// BU_MANAGER creates company directly (approved)
+exports.managerCreateCompany = async (req, res) => {
+  try {
+    const managerId = req.user.id || req.user._id || req.user;
+    const { name, businessUnit } = req.body;
+    if (!name || !businessUnit) return res.status(400).json({ msg: "Name and businessUnit are required" });
+
+    // Verify manager is assigned to the businessUnit
+    const manager = await User.findById(managerId);
+    if (!manager) return res.status(404).json({ msg: "Manager not found" });
+    if (!manager.businessUnits || !manager.businessUnits.map(String).includes(String(businessUnit))) {
+      return res.status(403).json({ msg: "Manager not assigned to this business unit" });
+    }
+
+    const company = new Company({ name, createdBy: managerId, businessUnit, status: "APPROVED" });
+    await company.save();
+
+    res.status(201).json({ company });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+// BU_MANAGER - get companies they created
+exports.getCompaniesForManager = async (req, res) => {
+  try {
+    const managerId = req.user.id || req.user._id || req.user;
+    const companies = await Company.find({ createdBy: managerId }).select("-__v");
+    res.status(200).json({ companies });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+// BU_MANAGER - get users for a specific company (must own company)
+exports.getCompanyUsers = async (req, res) => {
+  try {
+    const managerId = req.user.id || req.user._id || req.user;
+    const { companyId } = req.params;
+    const company = await Company.findById(companyId);
+    if (!company) return res.status(404).json({ msg: "Company not found" });
+    if (String(company.createdBy) !== String(managerId)) return res.status(403).json({ msg: "Not authorized" });
+
+    const users = await User.find({ company: companyId }).select("-password -__v");
+    res.status(200).json({ users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};

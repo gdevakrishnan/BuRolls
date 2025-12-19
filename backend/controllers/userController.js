@@ -58,3 +58,82 @@ exports.approveUser = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
+// Return the current user by reading token and fetching the latest data from DB
+exports.getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id || req.user;
+    const user = await User.findById(userId).select("-password -tempPassword -__v");
+    if (!user) return res.status(404).json({ msg: "User not found" });
+    res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+// SUPER_ADMIN — create a manager and map to business units
+exports.createManager = async (req, res) => {
+  try {
+    const { name, email, businessUnits } = req.body; // businessUnits: array of IDs
+    if (!name || !email) return res.status(400).json({ msg: "Name and email are required" });
+
+    let existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ msg: "User already exists" });
+
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    const manager = new User({ name, email, password: hashedPassword, role: "BU_MANAGER", status: "APPROVED", businessUnits });
+    await manager.save();
+
+    // Send welcome email with credentials
+    await sendEmail(
+      manager.email,
+      "Welcome to BuRolls - Manager Account Created",
+      `Hello ${manager.name},\n\nA manager account has been created for you.\n\nEmail: ${manager.email}\nPassword: ${tempPassword}\n\nPlease login and change your password.`
+    );
+
+    const toReturn = await User.findById(manager._id).select("-password -__v");
+    res.status(201).json({ manager: toReturn });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// BU_MANAGER — create a user and map to a company
+exports.managerCreateUser = async (req, res) => {
+  try {
+    const managerId = req.user.id || req.user._id || req.user;
+    const { name, email, companyId } = req.body;
+    if (!name || !email || !companyId) return res.status(400).json({ msg: "Name, email and companyId are required" });
+
+    // ensure company belongs to this manager
+    const company = await Company.findById(companyId);
+    if (!company) return res.status(404).json({ msg: "Company not found" });
+    if (String(company.createdBy) !== String(managerId)) return res.status(403).json({ msg: "You are not authorized for this company" });
+
+    let existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ msg: "User already exists" });
+
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    const user = new User({ name, email, password: hashedPassword, role: "BU_USER", status: "APPROVED", company: companyId });
+    await user.save();
+
+    // Send credentials
+    await sendEmail(
+      user.email,
+      "Your BuRolls Account - Company User",
+      `Hello ${user.name},\n\nYour account has been created for company ${company.name}.\n\nEmail: ${user.email}\nPassword: ${tempPassword}\n\nPlease login and change your password.`
+    );
+
+    const toReturn = await User.findById(user._id).select("-password -__v");
+    res.status(201).json({ user: toReturn });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
