@@ -14,5 +14,7 @@ const invoiceController = require('../controllers/invoiceController');
 router.get('/invoices', auth, rbac('SUPER_ADMIN'), invoiceController.getAllInvoices);
 router.get('/invoices/:invoiceId', auth, rbac('SUPER_ADMIN'), invoiceController.getInvoiceById);
 router.put('/invoices/:invoiceId', auth, rbac('SUPER_ADMIN'), invoiceController.adminUpdate);
+// Super admin marks a specific company's invoice entry as paid
+router.post('/invoices/:invoiceId/pay/:companyId', auth, rbac('SUPER_ADMIN'), invoiceController.adminMarkCompanyPaid);
 
 module.exports = router;

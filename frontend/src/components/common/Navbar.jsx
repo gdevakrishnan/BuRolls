@@ -3,14 +3,31 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Home, LogIn, UserPlus } from "lucide-react";
 import AppContext from "../../context/AppContext";
 import { setAuthToken } from '../../serviceWorkers/api';
+import { getNotifications, markNotificationRead } from '../../serviceWorkers/notificationServices';
+import { Bell } from 'lucide-react';
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, isAuthenticated, setUser, setIsAuthenticated } = useContext(AppContext) || {};
   const nav = useNavigate();
+  const [notifications, setNotifications] = React.useState([]);
+  const [showNot, setShowNot] = React.useState(false);
+  const unreadCount = notifications.filter(n=>!n.read).length;
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  // fetch notifications for managers and super admins
+  React.useEffect(()=>{
+    const load = async ()=>{
+      if (user && (user.role === 'SUPER_ADMIN' || user.role === 'BU_MANAGER')){
+        try{ const res = await getNotifications(); setNotifications(res.notifications || []); }catch(e){ console.error(e); }
+      } else {
+        setNotifications([]);
+      }
+    };
+    load();
+  }, [user]);
 
   // Links adjust based on auth & role
   const links = [
@@ -68,6 +85,31 @@ const Navbar = () => {
                 </Link>
               )
             ))}
+
+            {/* Notifications for SUPER_ADMIN and BU_MANAGER */}
+            {(user && (user.role === 'SUPER_ADMIN' || user.role === 'BU_MANAGER')) && (
+              <div className="relative">
+                <button onClick={()=>setShowNot(s=>!s)} className="p-2 rounded hover:bg-gray-100">
+                  <Bell />
+                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1">{unreadCount}</span>}
+                </button>
+                {showNot && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50 p-2">
+                    <div className="font-semibold mb-2">Notifications</div>
+                    <div className="max-h-64 overflow-auto">
+                      {notifications.length === 0 && <div className="text-sm text-gray-500">No notifications</div>}
+                      {notifications.map(n => (
+                        <div key={n._id} className={`p-2 border-b ${n.read? 'bg-white':'bg-emerald-50'}`}>
+                          <div className="text-sm">{n.message}</div>
+                          <div className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</div>
+                          {!n.read && <button className="text-xs text-blue-600 mt-1" onClick={async ()=>{ await markNotificationRead(n._id); const res = await getNotifications(); setNotifications(res.notifications || []); }}>Mark read</button>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

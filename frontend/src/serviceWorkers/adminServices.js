@@ -34,3 +34,13 @@ export const adminUpdateInvoice = async (id, payload) => {
   const res = await api.put(`/admin/invoices/${id}`, payload);
   return res.data;
 };
+
+export const setInvoiceTypeAndPercentage = async (id, { type, superAdminPercentage }) => {
+  const res = await api.put(`/admin/invoices/${id}`, { action: 'edit', updatedFields: { type, superAdminPercentage } });
+  return res.data;
+};
+
+export const adminMarkCompanyPaid = async (invoiceId, companyId, paymentInfo = {}) => {
+  const res = await api.post(`/admin/invoices/${invoiceId}/pay/${companyId}`, { paymentInfo });
+  return res.data;
+};

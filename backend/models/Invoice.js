@@ -14,6 +14,9 @@ const perCompanySchema = new mongoose.Schema({
   acceptedAt: Date,
   paidAt: Date,
   paymentInfo: Object,
+  // amounts for clarity and UI
+  companyShareAmount: { type: Number, default: 0 },
+  superAdminShareAmount: { type: Number, default: 0 },
 });
 
 const actionSchema = new mongoose.Schema({
@@ -38,6 +41,7 @@ const invoiceSchema = new mongoose.Schema({
   perCompanyStatus: [perCompanySchema],
   status: { type: String, enum: ['PENDING_ADMIN_APPROVAL','PENDING_COMPANY_APPROVAL','PARTIALLY_ACCEPTED','ACCEPTED','PARTIALLY_PAID','PAID','REJECTED'], default: 'PENDING_ADMIN_APPROVAL' },
   actionHistory: [actionSchema],
+  superAdminPercentage: { type: Number, default: 0 }, // percentage of each company's share that goes to super admin
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

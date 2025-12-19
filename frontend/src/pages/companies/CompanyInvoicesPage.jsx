@@ -31,11 +31,14 @@ export default function CompanyInvoicesPage(){
             <div className="font-semibold">Invoice #{inv.number} - {inv.type}</div>
             <div className="text-sm text-gray-500">Status: {inv.status}</div>
             <div className="text-sm text-gray-500">Amount: {inv.totalAmount}</div>
+            <div className="text-sm text-gray-500">Super admin %: {inv.superAdminPercentage || 0}%</div>
+            <div className="text-sm text-gray-500">Your share: {inv.perCompanyStatus?.find(p => String(p.company) === String(user.company?._id || user.company))?.companyShareAmount || 0}</div>
             <div className="flex gap-2 mt-2">
               {inv.perCompanyStatus?.map(p => (String(p.company) === String(user.company?._id || user.company) ? (
                 <React.Fragment key={String(p.company)}>
                   {p.status === 'PENDING' && <button className="px-2 py-1 bg-emerald-600 text-white rounded" onClick={()=>accept(inv._id)}>Accept</button>}
-                  {p.status === 'ACCEPTED' && <button className="px-2 py-1 bg-sky-600 text-white rounded" onClick={()=>pay(inv._id)}>Pay</button>}
+                  {p.status === 'ACCEPTED' && <div className="px-2 py-1 text-sm text-yellow-700">Awaiting admin to mark as Paid</div>}
+                  {p.status === 'PAID' && <div className="px-2 py-1 text-sm text-green-700">Paid</div>}
                 </React.Fragment>
               ): null))}            </div>
           </div>

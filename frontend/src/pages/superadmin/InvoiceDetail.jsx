@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getInvoice, adminUpdateInvoice } from '../../serviceWorkers/adminServices';
+import { getInvoice, adminUpdateInvoice, setInvoiceTypeAndPercentage, adminMarkCompanyPaid } from '../../serviceWorkers/adminServices';
 import { useParams } from 'react-router-dom';
 
 export default function InvoiceDetail(){
@@ -12,6 +12,10 @@ export default function InvoiceDetail(){
 
   const [editing, setEditing] = useState(false);
   const [editableItems, setEditableItems] = useState([]);
+  const [typeValue, setTypeValue] = useState('NORMAL');
+  const [percentage, setPercentage] = useState(0);
+
+  useEffect(()=>{ if(invoice){ setTypeValue(invoice.type); setPercentage(invoice.superAdminPercentage || 0); } }, [invoice]);
 
   const approve = async ()=>{
     const res = await adminUpdateInvoice(invoiceId, { action: 'approve' });
@@ -83,6 +87,46 @@ export default function InvoiceDetail(){
                     <div className="text-sm text-gray-500">Billing: {it.billingAddress}</div>
                   </div>
                 ))}
+                <div className="mt-4 p-3 border rounded bg-gray-50">
+                  <div className="mb-2 font-semibold">Admin Controls</div>
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm">Type</label>
+                    <select className="p-1 border" value={typeValue} onChange={(e)=>setTypeValue(e.target.value)}>
+                      <option value="NORMAL">NORMAL</option>
+                      <option value="CARRY">CARRY</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm">Super Admin %</label>
+                    <input type="number" className="p-1 border w-24" value={percentage} onChange={(e)=>setPercentage(e.target.value)} />
+                  </div>
+                  <div>
+                    <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={async ()=>{
+                      const res = await setInvoiceTypeAndPercentage(invoiceId, { type: typeValue, superAdminPercentage: Number(percentage) });
+                      if (res?.invoice){ alert('Saved'); load(); } else alert('Failed');
+                    }}>Save Type/Percentage</button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="font-semibold mb-2">Per-company breakdown</div>
+                  {invoice.perCompanyStatus.map((p, idx)=> (
+                    <div key={idx} className="border p-2 rounded my-2 flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold">Company: {invoice.applicableCompanies && (invoice.applicableCompanies.find(c=> String(c.company) === String(p.company))?.name || p.company)}</div>
+                        <div className="text-sm text-gray-600">Status: {p.status}</div>
+                        <div className="text-sm">Company share: {p.companyShareAmount?.toFixed ? p.companyShareAmount.toFixed(2) : p.companyShareAmount}</div>
+                        <div className="text-sm">Super admin share: {p.superAdminShareAmount?.toFixed ? p.superAdminShareAmount.toFixed(2) : p.superAdminShareAmount}</div>
+                      </div>
+                      <div>
+                        {p.status === 'ACCEPTED' && <button className="px-2 py-1 bg-emerald-600 text-white rounded" onClick={async ()=>{
+                          const res = await adminMarkCompanyPaid(invoiceId, p.company);
+                          if (res?.invoice){ alert('Marked paid'); load(); } else alert('Failed');
+                        }}>Mark Paid</button>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

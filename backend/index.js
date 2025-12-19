@@ -16,6 +16,8 @@ app.use("/api/v1/companies", require("./routes/companies"));
 app.use("/api/v1/business-units", require("./routes/businessUnits"));
 app.use("/api/v1/admin", require("./routes/admin"));
 app.use("/api/v1/manager", require("./routes/manager"));
+app.use('/api/v1/notifications', require('./routes/notifications'));
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

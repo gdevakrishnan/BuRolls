@@ -59,7 +59,7 @@ export default function CreateInvoice(){
         )}
 
         <div className="mb-4">
-          <div className="font-semibold mb-2">Items</div>
+          <div className="font-semibold mb-2">Bills</div>
           {formItems.map((it, idx)=> (
             <div key={idx} className="border p-3 mb-2 rounded">
               <input placeholder="Customer name" className="w-full mb-2 p-2 border" value={it.customerName} onChange={(e)=>updateItem(idx,'customerName', e.target.value)} />
