@@ -84,7 +84,7 @@ exports.createManager = async (req, res) => {
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    const manager = new User({ name, email, password: hashedPassword, role: "BU_MANAGER", status: "APPROVED", businessUnits });
+    const manager = new User({ name, email, password: hashedPassword, tempPassword, role: "BU_MANAGER", status: "APPROVED", businessUnits });
     await manager.save();
 
     // Send welcome email with credentials
@@ -93,6 +93,10 @@ exports.createManager = async (req, res) => {
       "Welcome to BuRolls - Manager Account Created",
       `Hello ${manager.name},\n\nA manager account has been created for you.\n\nEmail: ${manager.email}\nPassword: ${tempPassword}\n\nPlease login and change your password.`
     );
+
+    // Clear temp password for security
+    manager.tempPassword = undefined;
+    await manager.save();
 
     const toReturn = await User.findById(manager._id).select("-password -__v");
     res.status(201).json({ manager: toReturn });
@@ -106,7 +110,9 @@ exports.createManager = async (req, res) => {
 exports.managerCreateUser = async (req, res) => {
   try {
     const managerId = req.user.id || req.user._id || req.user;
-    const { name, email, companyId } = req.body;
+    // companyId can be provided either in params (route) or body
+    const companyId = req.params.companyId || req.body.companyId;
+    const { name, email } = req.body;
     if (!name || !email || !companyId) return res.status(400).json({ msg: "Name, email and companyId are required" });
 
     // ensure company belongs to this manager
@@ -120,7 +126,7 @@ exports.managerCreateUser = async (req, res) => {
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    const user = new User({ name, email, password: hashedPassword, role: "BU_USER", status: "APPROVED", company: companyId });
+    const user = new User({ name, email, password: hashedPassword, tempPassword, role: "BU_USER", status: "APPROVED", company: companyId });
     await user.save();
 
     // Send credentials
@@ -129,6 +135,10 @@ exports.managerCreateUser = async (req, res) => {
       "Your BuRolls Account - Company User",
       `Hello ${user.name},\n\nYour account has been created for company ${company.name}.\n\nEmail: ${user.email}\nPassword: ${tempPassword}\n\nPlease login and change your password.`
     );
+
+    // Clear temp password for security
+    user.tempPassword = undefined;
+    await user.save();
 
     const toReturn = await User.findById(user._id).select("-password -__v");
     res.status(201).json({ user: toReturn });

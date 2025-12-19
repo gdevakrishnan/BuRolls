@@ -47,8 +47,14 @@ const Login = () => {
             setUser(response?.data?.user);
             setIsAuthenticated(true);
             alert(response?.data?.msg || "Login successfull");
+
+            // redirect based on role
+            const role = response?.data?.user?.role;
+            if (role === 'SUPER_ADMIN') nav('/admin/dashboard');
+            else if (role === 'BU_MANAGER') nav('/manager/dashboard');
+            else nav('/');
           }
-          nav("/");
+
           setFormData({ email: "", password: "" });
         })
         .catch((e) => {

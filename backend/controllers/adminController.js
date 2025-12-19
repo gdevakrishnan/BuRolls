@@ -27,3 +27,23 @@ exports.getOverview = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Return simple aggregated stats for the admin dashboard
+exports.getStats = async (req, res) => {
+  try {
+    const totalBusinessUnits = await BusinessUnit.countDocuments();
+    const totalManagers = await User.countDocuments({ role: "BU_MANAGER" });
+    const totalCompanies = await Company.countDocuments();
+    const totalUsers = await User.countDocuments({ role: "BU_USER" });
+
+    res.status(200).json({
+      businessUnits: totalBusinessUnits,
+      managers: totalManagers,
+      companies: totalCompanies,
+      users: totalUsers,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

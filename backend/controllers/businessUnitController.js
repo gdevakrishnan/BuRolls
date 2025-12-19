@@ -5,13 +5,13 @@ const ALLOWED_FIELDS = ["name","companyLegalName","companyAddress","contactPhone
 
 exports.createBusinessUnit = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, companyLegalName, companyAddress, contactPhone } = req.body;
     if (!name) return res.status(400).json({ msg: "Name is required" });
 
     const exists = await BusinessUnit.findOne({ name });
     if (exists) return res.status(400).json({ msg: "Business Unit already exists" });
 
-    const bu = new BusinessUnit({ name, createdBy: req.user.id });
+    const bu = new BusinessUnit({ name, companyLegalName, companyAddress, contactPhone, createdBy: req.user.id });
     await bu.save();
 
     res.status(201).json({ bu });

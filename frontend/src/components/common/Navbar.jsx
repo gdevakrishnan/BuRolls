@@ -1,18 +1,40 @@
-import React, { useState, Fragment } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, Fragment, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Home, LogIn, UserPlus } from "lucide-react";
+import AppContext from "../../context/AppContext";
+import { setAuthToken } from '../../serviceWorkers/api';
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user, isAuthenticated, setUser, setIsAuthenticated } = useContext(AppContext) || {};
+  const nav = useNavigate();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
 
+  // Links adjust based on auth & role
   const links = [
     { to: "/", label: "Home", icon: <Home size={20} /> },
-    { to: "/login", label: "Login", icon: <LogIn size={20} /> },
-    { to: "/register", label: "Register", icon: <UserPlus size={20} /> },
   ];
+
+  if (!isAuthenticated) {
+    links.push({ to: "/login", label: "Login", icon: <LogIn size={20} /> });
+    links.push({ to: "/register", label: "Register", icon: <UserPlus size={20} /> });
+  } else {
+    if (user?.role === 'SUPER_ADMIN') {
+      links.push({ to: "/admin/dashboard", label: "Dashboard" });
+      links.push({ to: "/admin/business-units", label: "Business Units" });      links.push({ to: "/admin/managers", label: "Managers" });    } else if (user?.role === 'BU_MANAGER') {
+      links.push({ to: "/manager/dashboard", label: "Dashboard" });
+    }
+    links.push({ to: "/profile", label: "Profile" });
+    links.push({ to: "/", label: "Logout", action: () => {
+      localStorage.removeItem('burolls-token');
+      setAuthToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      nav('/login');
+    } });
+  }
 
   return (
     <Fragment>
@@ -30,13 +52,17 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-gray-700 hover:text-emerald-600 transition-colors font-medium"
-              >
-                {link.label}
-              </Link>
+              link.action ? (
+                <button key={link.label} onClick={link.action} className="text-gray-700 hover:text-emerald-600 transition-colors font-medium">{link.label}</button>
+              ) : (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="text-gray-700 hover:text-emerald-600 transition-colors font-medium"
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </div>
 
@@ -89,15 +115,21 @@ const Navbar = () => {
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="space-y-2">
               {links.map((link) => (
-                <li key={link.to}>
-                  <Link
-                    to={link.to}
-                    onClick={closeSidebar}
-                    className="flex items-center space-x-3 text-gray-700 hover:text-white hover:bg-emerald-600 px-4 py-3 rounded-lg transition-all duration-200"
-                  >
-                    {link.icon}
-                    <span className="font-medium">{link.label}</span>
-                  </Link>
+                <li key={link.label}>
+                  {link.action ? (
+                    <button onClick={() => { link.action(); closeSidebar(); }} className="w-full flex items-center space-x-3 text-gray-700 hover:text-white hover:bg-emerald-600 px-4 py-3 rounded-lg transition-all duration-200">
+                      <span className="font-medium">{link.label}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to={link.to}
+                      onClick={closeSidebar}
+                      className="flex items-center space-x-3 text-gray-700 hover:text-white hover:bg-emerald-600 px-4 py-3 rounded-lg transition-all duration-200"
+                    >
+                      {link.icon}
+                      <span className="font-medium">{link.label}</span>
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

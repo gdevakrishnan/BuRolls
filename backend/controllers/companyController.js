@@ -58,7 +58,7 @@ exports.approveCompany = async (req, res) => {
 exports.managerCreateCompany = async (req, res) => {
   try {
     const managerId = req.user.id || req.user._id || req.user;
-    const { name, businessUnit } = req.body;
+    const { name, businessUnit, legalName, legalAddress, address, contactPhone } = req.body;
     if (!name || !businessUnit) return res.status(400).json({ msg: "Name and businessUnit are required" });
 
     // Verify manager is assigned to the businessUnit
@@ -68,7 +68,7 @@ exports.managerCreateCompany = async (req, res) => {
       return res.status(403).json({ msg: "Manager not assigned to this business unit" });
     }
 
-    const company = new Company({ name, createdBy: managerId, businessUnit, status: "APPROVED" });
+    const company = new Company({ name, legalName, legalAddress, address, contactPhone, createdBy: managerId, businessUnit, status: "APPROVED" });
     await company.save();
 
     res.status(201).json({ company });
